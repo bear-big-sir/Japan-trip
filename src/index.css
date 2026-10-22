@@ -182,8 +182,11 @@ input:focus, textarea:focus { outline: 2px solid var(--red); outline-offset: -1p
 
 /* ---------- 第二階段 ---------- */
 .trip-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 600; }
-.trip-bar span { white-space: nowrap; }
-.trip-bar select { flex: 1; }
+.trip-bar-select { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.trip-bar-select span { white-space: nowrap; }
+.trip-bar select { flex: 1; min-width: 0; }
+.trip-bar > .btn { flex: 0 0 auto; }
+.trip-bar-empty p { margin: 0 0 8px; }
 .hint { color: var(--muted); font-size: .82rem; font-weight: 400; }
 .field-label { font-size: .92rem; font-weight: 500; margin-bottom: 4px; }
 .check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: .95rem; }
@@ -264,3 +267,4 @@ select { appearance: auto; }
 .conflict-side-head { display: flex; align-items: center; gap: 6px; }
 .conflict-side-head input { width: 20px; height: 20px; }
 .conflict-field { word-break: break-word; }
+.trip-bar-empty .btn { margin-left: 0; }
