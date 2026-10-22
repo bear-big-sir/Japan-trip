@@ -212,3 +212,30 @@ input:focus, textarea:focus { outline: 2px solid var(--red); outline-offset: -1p
 .timeline-time { flex: 0 0 52px; font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; padding-top: 2px; }
 .timeline-body { flex: 1; min-width: 0; }
 select { appearance: auto; }
+
+/* 待辦事項 */
+.todo-progress { display: flex; flex-direction: column; gap: 6px; }
+.progress { height: 8px; background: #f0ebe3; border-radius: 999px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--red); transition: width .2s; }
+.todo-group-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.todo-group-head h3 { margin: 0; }
+.todo-list { list-style: none; padding: 0; margin: 6px 0 0; }
+.todo-item { border-top: 1px solid var(--border); padding: 8px 0; }
+.todo-item:first-child { border-top: none; }
+.todo-check { padding: 2px 0; cursor: pointer; }
+.todo-item.done .todo-title { text-decoration: line-through; color: var(--muted); }
+.todo-notes { margin-left: 30px; }
+.todo-item .todo-actions { margin: 4px 0 0 30px; }
+
+/* 旅遊預算 */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.budget-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.budget-table th, .budget-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.budget-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.budget-table tfoot th { border-bottom: none; color: var(--red); }
+.filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.chip { flex: 0 0 auto; border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .88rem; cursor: pointer; min-height: 36px; }
+.chip.active { background: var(--red); border-color: var(--red); color: #fff; }
+.budget-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.budget-name { font-weight: 600; word-break: break-word; }
+.budget-amount { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
