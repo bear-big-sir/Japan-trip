@@ -4,10 +4,11 @@ import { buildExportFile, getAll, getStats, type Stats } from './db/db'
 import { downloadJson } from './lib/download'
 import { HomePage } from './pages/HomePage'
 import { ExchangePage } from './pages/ExchangePage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
 import { FlightsPage } from './pages/FlightsPage'
 import { HotelsPage } from './pages/HotelsPage'
 import { ItineraryPage } from './pages/ItineraryPage'
+import { TodosPage } from './pages/TodosPage'
+import { BudgetPage } from './pages/BudgetPage'
 import { TripBar } from './components/TripBar'
 
 type PageKey = 'trips' | 'flights' | 'hotels' | 'itinerary' | 'todos' | 'budget' | 'exchange'
@@ -21,17 +22,6 @@ const MENU: { key: PageKey; icon: string; label: string }[] = [
   { key: 'budget', icon: '💴', label: '旅遊預算' },
   { key: 'exchange', icon: '🔄', label: '資料交換與備份' },
 ]
-
-const PLACEHOLDERS: Record<'todos' | 'budget', { stage: string; features: string[] }> = {
-  todos: {
-    stage: '第三階段',
-    features: ['機票、飯店、護照文件、網路交通票券、行李、自訂', '勾選完成、修改、刪除'],
-  },
-  budget: {
-    stage: '第三階段',
-    features: ['機票、住宿、交通、餐飲、購物、門票、其他', '名稱、金額、幣別、日期、備註', '分類小計與總額（不同幣別分開計算，可自訂匯率）'],
-  },
-}
 
 const CURRENT_TRIP_KEY = 'usagi-current-trip'
 
@@ -135,12 +125,11 @@ export default function App() {
         {currentTrip && page === 'itinerary' && (
           <ItineraryPage key={currentTrip.id} trip={currentTrip} trips={trips} onChanged={reload} />
         )}
-        {(page === 'todos' || page === 'budget') && (
-          <PlaceholderPage
-            title={menuItem.label}
-            stage={PLACEHOLDERS[page].stage}
-            features={PLACEHOLDERS[page].features}
-          />
+        {currentTrip && page === 'todos' && (
+          <TodosPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
+        )}
+        {currentTrip && page === 'budget' && (
+          <BudgetPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
         )}
       </main>
 
