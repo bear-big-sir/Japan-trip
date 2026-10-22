@@ -20,6 +20,7 @@ npm run build   # 編譯正式版到 dist/
 | `src/types.ts` | 資料結構：旅行、航班、住宿、行程、待辦、預算、匯出格式 |
 | `src/db/db.ts` | IndexedDB 儲存層：新增、修改、刪除、整批取代、本機備份 |
 | `src/db/db.test.ts` | 儲存層自動測試 |
+| `src/db/copy.ts` | 複製某一天、複製旅行為範本（一律產生新 ID，不改動原資料） |
 | `src/lib/id.ts` | 唯一 ID 與時間工具 |
 | `src/pages/` | 各頁面 |
 | `.github/workflows/deploy.yml` | 推送到 main 時自動部署 GitHub Pages |
@@ -27,7 +28,7 @@ npm run build   # 編譯正式版到 dist/
 ## 開發進度
 
 - [x] 第一階段：專案、資料結構、IndexedDB、旅行管理、匯出、本機備份與還原
-- [ ] 第二階段：航班、住宿、每日行程
+- [x] 第二階段：航班、住宿、每日行程（單日檢視、調整順序、複製某一天、複製旅行為範本）
 - [ ] 第三階段：待辦、預算
 - [ ] 第四階段：JSON 匯入、預覽、安全合併、衝突處理
 - [ ] 第五階段：完整測試

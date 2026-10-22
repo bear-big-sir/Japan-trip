@@ -5,6 +5,10 @@ import { downloadJson } from './lib/download'
 import { HomePage } from './pages/HomePage'
 import { ExchangePage } from './pages/ExchangePage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
+import { FlightsPage } from './pages/FlightsPage'
+import { HotelsPage } from './pages/HotelsPage'
+import { ItineraryPage } from './pages/ItineraryPage'
+import { TripBar } from './components/TripBar'
 
 type PageKey = 'trips' | 'flights' | 'hotels' | 'itinerary' | 'todos' | 'budget' | 'exchange'
 
@@ -18,22 +22,7 @@ const MENU: { key: PageKey; icon: string; label: string }[] = [
   { key: 'exchange', icon: '🔄', label: '資料交換與備份' },
 ]
 
-const PLACEHOLDERS: Record<
-  Exclude<PageKey, 'trips' | 'exchange'>,
-  { stage: string; features: string[] }
-> = {
-  flights: {
-    stage: '第二階段',
-    features: ['航空公司、航班號碼', '出發／抵達日期時間、機場及航廈', '訂位資訊及備註', '新增、修改、刪除'],
-  },
-  hotels: {
-    stage: '第二階段',
-    features: ['飯店名稱、地址、電話', '入住／退房日期', '訂房編號（私人資料提醒）、房型及備註', '新增、修改、刪除'],
-  },
-  itinerary: {
-    stage: '第二階段',
-    features: ['依日期查看單日完整行程', '時間、景點、地址、交通、停留時間、餐廳購物、備註', '調整順序', '複製某一天、複製過去旅行當範本（不改動原資料）'],
-  },
+const PLACEHOLDERS: Record<'todos' | 'budget', { stage: string; features: string[] }> = {
   todos: {
     stage: '第三階段',
     features: ['機票、飯店、護照文件、網路交通票券、行李、自訂', '勾選完成、修改、刪除'],
@@ -130,12 +119,27 @@ export default function App() {
           <ExchangePage stats={stats} onExport={exportAll} onChanged={reload} />
         )}
         {page !== 'trips' && page !== 'exchange' && (
+          <TripBar
+            trips={trips}
+            current={currentTrip}
+            onSelect={selectTrip}
+            onGoHome={() => setPage('trips')}
+          />
+        )}
+        {currentTrip && page === 'flights' && (
+          <FlightsPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
+        )}
+        {currentTrip && page === 'hotels' && (
+          <HotelsPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
+        )}
+        {currentTrip && page === 'itinerary' && (
+          <ItineraryPage key={currentTrip.id} trip={currentTrip} trips={trips} onChanged={reload} />
+        )}
+        {(page === 'todos' || page === 'budget') && (
           <PlaceholderPage
             title={menuItem.label}
             stage={PLACEHOLDERS[page].stage}
             features={PLACEHOLDERS[page].features}
-            trip={currentTrip}
-            onGoHome={() => setPage('trips')}
           />
         )}
       </main>
