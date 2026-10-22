@@ -65,7 +65,7 @@ describe('IndexedDB 儲存層', () => {
     const f = await buildExportFile()
     expect(f.formatVersion).toBe(FORMAT_VERSION)
     expect(Object.keys(f.data).sort()).toEqual(
-      ['budget', 'flights', 'hotels', 'itinerary', 'todos', 'trips'],
+      ['budget', 'flights', 'hotels', 'itinerary', 'research', 'todos', 'trips'],
     )
     const stats = await getStats()
     expect(stats.counts.trips).toBe(f.data.trips.length)

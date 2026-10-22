@@ -1,7 +1,7 @@
 /**
  * 複製功能：一律產生「新的 ID」的新資料，原本的資料完全不會被修改或刪除。
  */
-import type { AppData, Flight, Hotel, ItineraryItem, TodoItem, Trip } from '../types'
+import type { AppData, Flight, Hotel, ItineraryItem, ResearchNote, TodoItem, Trip } from '../types'
 import { newId, nowIso } from '../lib/id'
 import { diffDays, isDate, shiftDate } from '../lib/date'
 import { getById, getByTrip, putMany } from './db'
@@ -57,6 +57,8 @@ export interface TemplateOptions {
   hotels: boolean
   flights: boolean
   todos: boolean
+  /** 舊的呼叫端沒有這個選項時視為不複製 */
+  research?: boolean
 }
 
 /**
@@ -110,6 +112,11 @@ export async function copyTripAsTemplate(sourceId: string, opt: TemplateOptions)
   if (opt.todos) {
     changes.todos = (await getByTrip('todos', sourceId)).map(
       (t): TodoItem => ({ ...fresh(t, now), tripId: trip.id, done: false }),
+    )
+  }
+  if (opt.research) {
+    changes.research = (await getByTrip('research', sourceId)).map(
+      (r): ResearchNote => ({ ...fresh(r, now), tripId: trip.id }),
     )
   }
   await putMany(changes)
