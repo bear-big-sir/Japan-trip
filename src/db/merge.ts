@@ -91,7 +91,7 @@ export function validateImport(text: string, localTripIds: Iterable<string> = []
     return { ok: false, errors: ['這不是正確的 JSON 檔案，可能檔案損壞或選錯檔案。'] }
   }
   if (!isObj(raw) || raw.app !== APP_ID) {
-    return { ok: false, errors: ['這個檔案不是「兔兔家的日本自由行」匯出的資料。'] }
+    return { ok: false, errors: ['這個檔案不是本系統（日本自由行管理）匯出的資料。'] }
   }
   const v = raw.formatVersion
   if (typeof v !== 'number' || !Number.isInteger(v) || v < MIN_FORMAT_VERSION) {

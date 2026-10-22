@@ -88,12 +88,12 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
 
       <div className="card">
         <h3>① 這台裝置的名稱</h3>
-        <p className="muted">匯出檔案會記錄這個名稱，方便分辨是誰匯出的（例如「兔兔的 iPhone」）。</p>
+        <p className="muted">匯出檔案會記錄這個名稱，方便分辨是誰匯出的（例如「我的 iPhone」）。</p>
         <div className="inline-form">
           <input
             value={deviceName}
             onChange={(e) => setDeviceName(e.target.value)}
-            placeholder="例如：兔兔的 iPhone"
+            placeholder="例如：我的 iPhone"
           />
           <button className="btn" onClick={saveName} disabled={deviceName.trim() === savedName}>
             儲存

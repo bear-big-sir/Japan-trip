@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Trip } from './types'
-import { buildExportFile, getAll, getStats, markExported, type Stats } from './db/db'
+import { buildExportFile, getAll, getMeta, getStats, markExported, setMeta, type Stats } from './db/db'
+import { DEFAULT_TITLE, tabTitle } from './lib/title'
+import { TitleDialog } from './components/TitleDialog'
 import { downloadJson } from './lib/download'
 import { HomePage } from './pages/HomePage'
 import { ExchangePage } from './pages/ExchangePage'
@@ -47,6 +49,24 @@ export default function App() {
     }
   })
   const [error, setError] = useState('')
+  const [title, setTitle] = useState(DEFAULT_TITLE)
+  const [editingTitle, setEditingTitle] = useState(false)
+
+  useEffect(() => {
+    getMeta<string>('appTitle')
+      .then((t) => t && setTitle(t))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    document.title = tabTitle(title)
+  }, [title])
+
+  async function saveTitle(t: string) {
+    await setMeta('appTitle', t)
+    setTitle(t)
+    setEditingTitle(false)
+  }
 
   const reload = useCallback(async () => {
     try {
@@ -86,7 +106,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>🐰 兔兔家的日本自由行</h1>
+        <div className="header-title">
+          <h1>{title}</h1>
+          <button className="title-edit" onClick={() => setEditingTitle(true)} aria-label="修改網站標題">
+            ✏️
+          </button>
+        </div>
         <nav className="menu" aria-label="主要選單">
           {MENU.map((m) => (
             <button
@@ -148,6 +173,10 @@ export default function App() {
           <BudgetPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
         )}
       </main>
+
+      {editingTitle && (
+        <TitleDialog current={title} onSave={saveTitle} onCancel={() => setEditingTitle(false)} />
+      )}
 
       <footer className="footer">
         資料只保存在本裝置瀏覽器（IndexedDB），不會上傳到任何伺服器。
