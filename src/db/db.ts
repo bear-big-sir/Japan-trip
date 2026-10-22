@@ -301,3 +301,25 @@ export async function deleteBackup(id: string) {
   tx.objectStore(BACKUP_STORE).delete(id)
   await txDone(tx)
 }
+
+/**
+ * 在同一個交易裡寫入多筆資料（新增或覆寫）。
+ * 任何一筆失敗，整批都不會寫入。
+ */
+export async function putMany(changes: Partial<AppData>) {
+  const stores = (Object.keys(changes) as DataStoreName[]).filter((s) => changes[s]?.length)
+  if (stores.length === 0) return
+  const db = await openDb()
+  const tx = db.transaction([...stores, META_STORE], 'readwrite')
+  try {
+    for (const name of stores) {
+      const os = tx.objectStore(name)
+      for (const rec of changes[name]!) os.put(rec)
+    }
+    touch(tx)
+  } catch (e) {
+    tx.abort()
+    throw e
+  }
+  await txDone(tx)
+}

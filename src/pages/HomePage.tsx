@@ -5,6 +5,7 @@ import { formatDateTime } from '../lib/id'
 import { ConfirmDialog } from '../components/Modal'
 import { TripForm, type TripFields } from '../components/TripForm'
 import { BackupWarning, StatsBar } from '../components/StatsBar'
+import { TemplateDialog } from '../components/TemplateDialog'
 
 interface Props {
   trips: Trip[]
@@ -28,6 +29,7 @@ export function HomePage({
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<Trip | 'new' | null>(null)
   const [deleting, setDeleting] = useState<Trip | null>(null)
+  const [templating, setTemplating] = useState<Trip | null>(null)
 
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -133,6 +135,9 @@ export function HomePage({
                 <button className="btn btn-small" onClick={() => setEditing(t)}>
                   修改
                 </button>
+                <button className="btn btn-small" onClick={() => setTemplating(t)}>
+                  複製為範本
+                </button>
                 <button className="btn btn-small btn-danger-outline" onClick={() => setDeleting(t)}>
                   刪除
                 </button>
@@ -158,6 +163,17 @@ export function HomePage({
           initial={editing === 'new' ? undefined : editing}
           onSave={save}
           onCancel={() => setEditing(null)}
+        />
+      )}
+      {templating && (
+        <TemplateDialog
+          source={templating}
+          onCancel={() => setTemplating(null)}
+          onDone={async (t) => {
+            setTemplating(null)
+            onSelectTrip(t.id)
+            await onChanged()
+          }}
         />
       )}
       {deleting && (
