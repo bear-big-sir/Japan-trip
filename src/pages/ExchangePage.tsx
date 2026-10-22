@@ -13,6 +13,7 @@ import { formatDateTime } from '../lib/id'
 import { downloadJson, exportFileName } from '../lib/download'
 import { ConfirmDialog } from '../components/Modal'
 import { BackupWarning, StatsBar } from '../components/StatsBar'
+import { ImportPanel } from '../components/ImportPanel'
 
 interface Props {
   stats: Stats | null
@@ -73,7 +74,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
   }
 
   const countOf = (b: LocalBackup) =>
-    Object.values(b.file.data).reduce((sum, list) => sum + list.length, 0)
+    Object.values(b.file.data).reduce((sum, list) => sum + (list?.length ?? 0), 0)
 
   return (
     <section>
@@ -103,6 +104,10 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
       <div className="card">
         <h3>② 匯出 JSON</h3>
         <p>匯出這台裝置上的全部旅行及相關資料，檔名會像 {exportFileName()}。</p>
+        <p className="muted small">
+          📅 建議每次新增或修改一批資料後就匯出一次，存到 iCloud 雲碟、Google 雲端硬碟或寄給自己，
+          換手機或清除瀏覽器資料時才救得回來。
+        </p>
         <p className="warning-text">
           ⚠️ 檔案可能包含訂房編號、航班訂位等私人資料，請妥善保存，不要公開分享或上傳到 GitHub。
         </p>
@@ -111,13 +116,13 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
         </button>
       </div>
 
-      <div className="card">
-        <h3>③ 匯入 JSON 與安全合併</h3>
-        <p className="muted">
-          🚧 匯入、預覽、衝突比對與安全合併會在<b>第四階段</b>完成。
-          現在的資料結構已經為合併做好準備：每筆資料都有唯一 ID、建立時間及修改時間。
-        </p>
-      </div>
+      <ImportPanel
+        onExport={onExport}
+        onChanged={async () => {
+          await refresh()
+          await onChanged()
+        }}
+      />
 
       <div className="card">
         <h3>④ 本機備份與還原</h3>

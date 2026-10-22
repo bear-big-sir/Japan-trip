@@ -1,23 +1,33 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Trip } from './types'
-import { buildExportFile, getAll, getStats, type Stats } from './db/db'
+import { buildExportFile, getAll, getStats, markExported, type Stats } from './db/db'
 import { downloadJson } from './lib/download'
 import { HomePage } from './pages/HomePage'
 import { ExchangePage } from './pages/ExchangePage'
 import { FlightsPage } from './pages/FlightsPage'
 import { HotelsPage } from './pages/HotelsPage'
 import { ItineraryPage } from './pages/ItineraryPage'
+import { ResearchPage } from './pages/ResearchPage'
 import { TodosPage } from './pages/TodosPage'
 import { BudgetPage } from './pages/BudgetPage'
 import { TripBar } from './components/TripBar'
 
-type PageKey = 'trips' | 'flights' | 'hotels' | 'itinerary' | 'todos' | 'budget' | 'exchange'
+type PageKey =
+  | 'trips'
+  | 'flights'
+  | 'hotels'
+  | 'itinerary'
+  | 'research'
+  | 'todos'
+  | 'budget'
+  | 'exchange'
 
 const MENU: { key: PageKey; icon: string; label: string }[] = [
   { key: 'trips', icon: '🗾', label: '我的旅行' },
   { key: 'flights', icon: '✈️', label: '航班與機場' },
   { key: 'hotels', icon: '🏨', label: '飯店住宿' },
   { key: 'itinerary', icon: '📅', label: '每日行程' },
+  { key: 'research', icon: '📝', label: '旅遊功課' },
   { key: 'todos', icon: '✅', label: '待辦事項' },
   { key: 'budget', icon: '💴', label: '旅遊預算' },
   { key: 'exchange', icon: '🔄', label: '資料交換與備份' },
@@ -64,7 +74,10 @@ export default function App() {
   }
 
   async function exportAll() {
-    downloadJson(await buildExportFile())
+    const file = await buildExportFile()
+    downloadJson(file)
+    await markExported(file.exportedAt)
+    await reload()
   }
 
   const currentTrip = trips.find((t) => t.id === currentTripId) ?? null
@@ -124,6 +137,9 @@ export default function App() {
         )}
         {currentTrip && page === 'itinerary' && (
           <ItineraryPage key={currentTrip.id} trip={currentTrip} trips={trips} onChanged={reload} />
+        )}
+        {currentTrip && page === 'research' && (
+          <ResearchPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />
         )}
         {currentTrip && page === 'todos' && (
           <TodosPage key={currentTrip.id} trip={currentTrip} onChanged={reload} />

@@ -21,7 +21,8 @@ import {
 import { newId, nowIso } from '../lib/id'
 
 const DB_NAME = 'usagi-japan-trip'
-const DB_VERSION = 1
+/** 版本 2：新增 research（旅遊功課）資料表 */
+const DB_VERSION = 2
 const BACKUP_STORE = 'backups'
 const META_STORE = 'meta'
 /** 本機最多保留幾份自動備份 */
@@ -48,7 +49,15 @@ export function openDb(): Promise<IDBDatabase> {
         db.createObjectStore(META_STORE)
       }
     }
-    req.onsuccess = () => resolve(req.result)
+    req.onsuccess = () => {
+      const db = req.result
+      // 網站更新後，新版頁面需要升級資料庫：舊分頁要讓出連線，不然新版會被卡住
+      db.onversionchange = () => {
+        db.close()
+        dbPromise = null
+      }
+      resolve(db)
+    }
     req.onerror = () => {
       dbPromise = null
       reject(req.error)
@@ -172,7 +181,7 @@ export async function deleteRecord(store: Exclude<DataStoreName, 'trips'>, id: s
   await txDone(tx)
 }
 
-/** 刪除旅行，以及這趟旅行底下所有航班、住宿、行程、待辦、預算（同一個交易，要嘛全刪要嘛都不刪） */
+/** 刪除旅行，以及這趟旅行底下所有航班、住宿、行程、功課、待辦、預算（同一個交易，要嘛全刪要嘛都不刪） */
 export async function deleteTrip(tripId: string) {
   const db = await openDb()
   const tx = db.transaction(['trips', ...CHILD_STORES, META_STORE], 'readwrite')
@@ -198,7 +207,8 @@ export async function replaceAll(data: AppData) {
     for (const name of DATA_STORES) {
       const os = tx.objectStore(name)
       os.clear()
-      for (const rec of data[name]) os.put(rec)
+      // 舊版備份沒有後來新增的資料表，視為空的
+      for (const rec of data[name] ?? []) os.put(rec)
     }
     touch(tx)
   } catch (e) {
@@ -226,6 +236,8 @@ export interface Stats {
   counts: Record<DataStoreName, number>
   total: number
   lastModified?: string
+  /** 最後一次按「匯出全部資料」的時間 */
+  lastExportAt?: string
 }
 
 export async function getStats(): Promise<Stats> {
@@ -240,8 +252,11 @@ export async function getStats(): Promise<Stats> {
   const lastModified = (await reqToPromise(tx.objectStore(META_STORE).get('lastModified'))) as
     | string
     | undefined
+  const lastExportAt = (await reqToPromise(tx.objectStore(META_STORE).get('lastExportAt'))) as
+    | string
+    | undefined
   const total = Object.values(counts).reduce((a, b) => a + b, 0)
-  return { counts, total, lastModified }
+  return { counts, total, lastModified, lastExportAt }
 }
 
 // ---------- 匯出檔案與本機備份 ----------
@@ -254,6 +269,11 @@ export async function buildExportFile(): Promise<ExportFile> {
     deviceName: (await getMeta<string>('deviceName')) ?? '',
     data: await loadAll(),
   }
+}
+
+/** 記錄「已經匯出過 JSON」的時間，用來提醒還沒備份的變更 */
+export async function markExported(at = nowIso()) {
+  await setMeta('lastExportAt', at)
 }
 
 /** 建立一份本機備份（存在同一個瀏覽器裡，用於匯入出錯時還原） */

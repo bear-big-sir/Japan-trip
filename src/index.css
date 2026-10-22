@@ -239,3 +239,25 @@ select { appearance: auto; }
 .budget-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .budget-name { font-weight: 600; word-break: break-word; }
 .budget-amount { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* 旅遊功課 */
+.stars { color: #e0a800; margin-left: 8px; font-size: .9rem; letter-spacing: 1px; }
+.research-content { margin-top: 6px; padding: 8px 10px; background: #faf7f2; border-radius: 8px; }
+.export-reminder { margin-top: 6px; color: #8a5a00; font-size: .88rem; font-weight: 600; }
+
+/* 匯入與合併 */
+.import-errors ul { margin: 6px 0; padding-left: 20px; }
+.import-preview { display: flex; flex-direction: column; gap: 10px; }
+.import-file { background: #faf7f2; border-radius: 8px; padding: 8px 10px; word-break: break-all; }
+.import-notes { margin: 0; padding-left: 20px; }
+.import-result ul { margin: 4px 0 8px; padding-left: 20px; }
+.conflicts h4 { margin: 4px 0; color: var(--red); }
+.conflict { border: 1px solid var(--warn-border); background: var(--warn-bg); border-radius: 10px; padding: 10px; margin-top: 10px; }
+.conflict-title { font-weight: 600; margin-bottom: 8px; word-break: break-word; }
+.conflict-sides { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 640px) { .conflict-sides { grid-template-columns: 1fr 1fr; } }
+.conflict-side { display: flex; flex-direction: column; gap: 2px; background: #fff; border: 2px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: .9rem; }
+.conflict-side.chosen { border-color: var(--red); }
+.conflict-side-head { display: flex; align-items: center; gap: 6px; }
+.conflict-side-head input { width: 20px; height: 20px; }
+.conflict-field { word-break: break-word; }

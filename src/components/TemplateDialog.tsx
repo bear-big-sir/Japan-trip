@@ -18,15 +18,16 @@ export function TemplateDialog({ source, onCancel, onDone }: Props) {
     hotels: true,
     flights: false,
     todos: true,
+    research: true,
   })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const check = (key: 'itinerary' | 'hotels' | 'flights' | 'todos', label: string) => (
+  const check = (key: 'itinerary' | 'hotels' | 'flights' | 'todos' | 'research', label: string) => (
     <label className="check">
       <input
         type="checkbox"
-        checked={opt[key]}
+        checked={!!opt[key]}
         onChange={(e) => setOpt({ ...opt, [key]: e.target.checked })}
       />
       <span>{label}</span>
@@ -73,6 +74,7 @@ export function TemplateDialog({ source, onCancel, onDone }: Props) {
           {check('itinerary', '每日行程')}
           {check('hotels', '飯店住宿（不含訂房編號）')}
           {check('flights', '航班（不含訂位資訊）')}
+          {check('research', '旅遊功課')}
           {check('todos', '待辦事項（全部改回未完成）')}
           <p className="hint">預算不會被複製。</p>
         </div>

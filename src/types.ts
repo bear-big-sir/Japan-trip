@@ -8,8 +8,14 @@
  * 4. 匯出檔案帶有 formatVersion，未來格式升級時可以判斷相容性。
  */
 
-/** 匯出檔案的格式版本。資料結構有不相容的變更時才加 1。 */
-export const FORMAT_VERSION = 1
+/**
+ * 匯出檔案的格式版本。資料結構有變更時加 1。
+ * 版本 2：新增「旅遊功課」(research)。版本 1 的檔案仍可匯入（視為沒有旅遊功課）。
+ */
+export const FORMAT_VERSION = 2
+
+/** 可以匯入的最舊版本 */
+export const MIN_FORMAT_VERSION = 1
 
 /** 用來辨識「這是本系統匯出的檔案」 */
 export const APP_ID = 'usagi-japan-trip'
@@ -127,14 +133,44 @@ export interface BudgetItem extends TripChild {
   notes: string
 }
 
+export type ResearchCategory = 'sight' | 'food' | 'shopping' | 'transport' | 'tips' | 'other'
+
+export const RESEARCH_CATEGORY_LABELS: Record<ResearchCategory, string> = {
+  sight: '景點',
+  food: '美食',
+  shopping: '購物',
+  transport: '交通',
+  tips: '小撇步',
+  other: '其他',
+}
+
+/** 旅遊功課：出發前查到的資料、網址、心得 */
+export interface ResearchNote extends TripChild {
+  category: ResearchCategory
+  title: string
+  address: string
+  url: string
+  content: string
+  /** 想去程度：0 = 未標記，1～3 顆星 */
+  priority: number
+}
+
 /** 所有資料表（IndexedDB object store）名稱 */
-export type DataStoreName = 'trips' | 'flights' | 'hotels' | 'itinerary' | 'todos' | 'budget'
+export type DataStoreName =
+  | 'trips'
+  | 'flights'
+  | 'hotels'
+  | 'itinerary'
+  | 'research'
+  | 'todos'
+  | 'budget'
 
 export const DATA_STORES: DataStoreName[] = [
   'trips',
   'flights',
   'hotels',
   'itinerary',
+  'research',
   'todos',
   'budget',
 ]
@@ -143,6 +179,7 @@ export const CHILD_STORES: Exclude<DataStoreName, 'trips'>[] = [
   'flights',
   'hotels',
   'itinerary',
+  'research',
   'todos',
   'budget',
 ]
@@ -152,6 +189,7 @@ export const STORE_LABELS: Record<DataStoreName, string> = {
   flights: '航班',
   hotels: '住宿',
   itinerary: '行程',
+  research: '功課',
   todos: '待辦',
   budget: '預算',
 }
@@ -161,6 +199,7 @@ export interface StoreRecordMap {
   flights: Flight
   hotels: Hotel
   itinerary: ItineraryItem
+  research: ResearchNote
   todos: TodoItem
   budget: BudgetItem
 }
@@ -187,5 +226,5 @@ export interface LocalBackup {
 }
 
 export function emptyData(): AppData {
-  return { trips: [], flights: [], hotels: [], itinerary: [], todos: [], budget: [] }
+  return { trips: [], flights: [], hotels: [], itinerary: [], research: [], todos: [], budget: [] }
 }
