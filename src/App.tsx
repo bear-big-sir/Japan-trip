@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Trip } from './types'
-import { buildExportFile, getAll, getMeta, getStats, markExported, setMeta, type Stats } from './db/db'
+import { buildExportFile, createRecord, getAll, getMeta, getStats, markExported, setMeta, type Stats } from './db/db'
 import { DEFAULT_TITLE, tabTitle } from './lib/title'
 import { TitleDialog } from './components/TitleDialog'
 import { downloadJson } from './lib/download'
@@ -13,6 +13,7 @@ import { ResearchPage } from './pages/ResearchPage'
 import { TodosPage } from './pages/TodosPage'
 import { BudgetPage } from './pages/BudgetPage'
 import { TripBar } from './components/TripBar'
+import type { TripFields } from './components/TripForm'
 
 type PageKey =
   | 'trips'
@@ -93,6 +94,12 @@ export default function App() {
     }
   }
 
+  async function createTrip(fields: TripFields) {
+    const t = await createRecord('trips', fields)
+    selectTrip(t.id)
+    await reload()
+  }
+
   async function exportAll() {
     const file = await buildExportFile()
     downloadJson(file)
@@ -151,7 +158,7 @@ export default function App() {
             trips={trips}
             current={currentTrip}
             onSelect={selectTrip}
-            onGoHome={() => setPage('trips')}
+            onCreate={createTrip}
           />
         )}
         {currentTrip && page === 'flights' && (
