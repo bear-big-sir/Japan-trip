@@ -130,6 +130,10 @@ export default function App() {
               <span>{m.label}</span>
             </button>
           ))}
+          <a className="menu-item" href="./drive-map.html">
+            <span className="menu-icon">🚗</span>
+            <span>自駕地圖</span>
+          </a>
         </nav>
       </header>
 

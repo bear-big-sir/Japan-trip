@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>北陸岐阜自駕地圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: map sheet on the left, route planner on the right; stacks on phones. */
+:root{
+  --bg:#eef2f3; --paper:#fbfcfc; --ink:#1d2a30; --muted:#5d6e75; --line:#c9d4d8;
+  --sea:#d5e6ee; --land:#f3f1ea; --exp:#2f6f8f; --gen:#b0855a; --accent:#c2412d; --seasonal:#7a6a9c;
+  --toyama:#2f7f6f; --ishikawa:#b2552f; --fukui:#3c5fa8; --gifu:#8a6d1e; --aichi:#6b6f78;
+  --warn-bg:#fff4e0; --warn-fg:#7a4b00;
+  --display:"Zen Kaku Gothic New","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12191c; --paper:#182226; --ink:#e3ebee; --muted:#9aaab0; --line:#2e3d43;
+  --sea:#16303b; --land:#1f2a2c; --exp:#6fb3d4; --gen:#d3a777; --accent:#ff7a63; --seasonal:#b7a6dc;
+  --toyama:#5fc0aa; --ishikawa:#e88a62; --fukui:#86a4ea; --gifu:#d6b553; --aichi:#a7acb6;
+  --warn-bg:#3a2c12; --warn-fg:#f3cf8a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12191c; --paper:#182226; --ink:#e3ebee; --muted:#9aaab0; --line:#2e3d43;
+  --sea:#16303b; --land:#1f2a2c; --exp:#6fb3d4; --gen:#d3a777; --accent:#ff7a63; --seasonal:#b7a6dc;
+  --toyama:#5fc0aa; --ishikawa:#e88a62; --fukui:#86a4ea; --gifu:#d6b553; --aichi:#a7acb6;
+  --warn-bg:#3a2c12; --warn-fg:#f3cf8a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+header h1{font-family:var(--display);font-size:1.7rem;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:0;border-top:3px solid}
+.dot{width:10px;height:10px;border-radius:50%}
+.panel{display:grid;gap:16px;min-width:0}
+h2{font-family:var(--display);font-size:1.1rem;margin:0 0 8px}
+.info{min-height:96px}
+.info .pref{font-size:.75rem;letter-spacing:.06em;font-weight:700}
+.info .nm{font-family:var(--display);font-size:1.25rem;font-weight:700}
+.info .jp{color:var(--muted);font-size:.85rem;margin-left:6px}
+.info p{margin:6px 0 10px;font-size:.92rem}
+button,.btn{font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{border-color:var(--exp)}
+button:focus-visible,.btn:focus-visible{outline:2px solid var(--exp);outline-offset:2px}
+.primary{background:var(--exp);border-color:var(--exp);color:var(--paper);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+ol.route{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.stop{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0}
+.num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--paper);font-size:.8rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.stop .n{font-weight:700}
+.stop .ctl{display:flex;gap:4px}
+.stop .ctl button{padding:2px 8px}
+.leg{margin-left:12px;padding:2px 0 2px 26px;border-left:2px dashed var(--line);font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.leg.long{color:var(--warn-fg)}
+.total{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:8px;padding-top:8px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.tip{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px}
+.tip h3{font-family:var(--display);font-size:1rem;margin:0 0 6px}
+.tip p,.tip li{font-size:.9rem;margin:0}
+.tip ol{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.tip.warn{background:var(--warn-bg);border-color:transparent;color:var(--warn-fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:3px 10px;font-size:.82rem}
+.spot{cursor:pointer}
+.spot:focus{outline:none}
+.spot:focus-visible circle.hit{stroke:var(--exp);stroke-width:2}
+@media (prefers-reduced-motion:no-preference){.spot circle.pt{transition:r .15s}}
+</style>
+<style>
+body{margin:0;font-size:14px}
+.back{font-size:.9rem;color:var(--exp)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="./">← 回到旅行管理系統</a>
+    <h1>北陸＋岐阜 自駕路線地圖</h1>
+    <p>富山、石川、福井、岐阜放在同一張地圖上。點地圖上的地點加入路線，右邊會依順序估算每段車程，最後一鍵開到 Google 地圖導航。車程是一般路況的概略時間，出發前請以 Google 地圖為準。</p>
+  </header>
+
+  <div class="grid">
+    <div class="sheet">
+      <svg id="map" viewBox="0 0 520 880" role="img" aria-label="北陸三縣與岐阜縣的主要景點及道路示意圖"></svg>
+      <div class="legend">
+        <span><i class="sw" style="border-color:var(--exp)"></i>高速公路</span>
+        <span><i class="sw" style="border-color:var(--gen)"></i>一般道路</span>
+        <span><i class="sw" style="border-color:var(--seasonal);border-top-style:dashed"></i>季節限定</span>
+        <span><i class="dot" style="background:var(--toyama)"></i>富山</span>
+        <span><i class="dot" style="background:var(--ishikawa)"></i>石川</span>
+        <span><i class="dot" style="background:var(--fukui)"></i>福井</span>
+        <span><i class="dot" style="background:var(--gifu)"></i>岐阜</span>
+        <span><i class="dot" style="background:var(--aichi)"></i>愛知（進出點）</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="sheet info" id="info">
+        <div class="empty">點地圖上的圓點，看介紹並加入路線。</div>
+      </div>
+
+      <div class="sheet">
+        <div class="row" style="justify-content:space-between">
+          <h2 id="routeTitle">我的路線</h2>
+          <div class="row">
+            <button id="clear" type="button">清空</button>
+          </div>
+        </div>
+        <ol class="route" id="route"></ol>
+        <div class="total" id="total" hidden><span>合計開車時間（約）</span><span id="totalVal"></span></div>
+        <div class="row" style="margin-top:12px">
+          <a class="btn primary" id="gmap" href="#" target="_blank" rel="noopener">在 Google 地圖開啟整條路線</a>
+        </div>
+        <p class="note" id="gnote">Google 地圖一次最多帶 10 個地點，超過時請分天開啟。</p>
+      </div>
+
+      <div class="sheet">
+        <h2>快速套用範例</h2>
+        <div class="chips" id="samples"></div>
+        <p class="note">範例只是參考骨架，套用後可以自由增減地點。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tips">
+    <div class="tip warn">
+      <h3>出發前一定要確認</h3>
+      <ul style="margin:0;padding-left:1.2em;display:grid;gap:4px">
+        <li>立山黑部不能開自用車進去。富山側停在「立山站」，長野側停「扇澤」，再換纜車和巴士。</li>
+        <li>能登半島（輪島、和倉一帶）仍在震災復原中，部分道路和設施有管制，出發前查最新狀況。</li>
+        <li>12 月到 3 月北陸和飛驒常下大雪，租車要指定雪胎，山路會比表上慢很多。</li>
+        <li>白山白川鄉白色公路約 6 月到 11 月上旬開放，需付通行費，冬季封閉。</li>
+      </ul>
+    </div>
+    <div class="tip">
+      <h3>高速公路省錢</h3>
+      <p>外國旅客租車可以加購「Central Nippon Expressway Pass（CEP）」，北陸、中部的高速公路在天數內吃到飽。是否適用、價格與範圍，請在租車時向租車公司確認，並記得租有 ETC 卡的車。</p>
+    </div>
+    <div class="tip">
+      <h3>想釘自己的景點：Google 我的地圖</h3>
+      <ol>
+        <li>電腦開 google.com/mymaps，按「建立新地圖」。</li>
+        <li>上方搜尋列輸入景點或飯店，按「新增至地圖」。</li>
+        <li>按「新增圖層」，一天一個圖層，例如「Day 1 名古屋→白川鄉」。</li>
+        <li>按搜尋列下方的「新增路線」圖示，可以畫出開車路線。</li>
+        <li>按「分享」給先生，手機 Google 地圖的「已儲存 → 地圖」就看得到。</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+const PREF={toyama:["富山縣","var(--toyama)"],ishikawa:["石川縣","var(--ishikawa)"],fukui:["福井縣","var(--fukui)"],gifu:["岐阜縣","var(--gifu)"],aichi:["愛知縣","var(--aichi)"]};
+// lat, lon are approximate (city / sight centers)
+const SPOTS=[
+ {id:"toy",n:"富山市",jp:"富山駅",p:"toyama",lat:36.70,lon:137.21,d:"富山灣壽司、環水公園。立山黑部和宇奈月的出發據點，附近有富山機場。",lx:12,ly:4},
+ {id:"tym",n:"立山站",jp:"立山駅",p:"toyama",lat:36.58,lon:137.44,d:"立山黑部阿爾卑斯路線富山側入口，自駕在這裡停車換纜車。室堂、雪之大谷（約 4 到 6 月）從這裡上山。",lx:10,ly:4},
+ {id:"una",n:"宇奈月溫泉・黑部峽谷",jp:"宇奈月温泉",p:"toyama",lat:36.81,lon:137.58,d:"黑部峽谷小火車起點，約 4 月下旬到 11 月行駛。",lx:-8,ly:-12,anchor:"end"},
+ {id:"tka",n:"高岡",jp:"高岡駅",p:"toyama",lat:36.75,lon:137.02,d:"高岡大佛、瑞龍寺，雨晴海岸可以看到隔海的立山連峰。",lx:-10,ly:4,anchor:"end"},
+ {id:"gks",n:"五箇山",jp:"五箇山 相倉合掌造り集落",p:"toyama",lat:36.43,lon:136.93,d:"相倉、菅沼合掌村，比白川鄉安靜，世界遺產。",lx:10,ly:4},
+ {id:"kz",n:"金澤",jp:"兼六園",p:"ishikawa",lat:36.56,lon:136.66,d:"兼六園、東茶屋街、近江町市場、21 世紀美術館。市區停車不易，建議住市區時把車停在飯店。",lx:-10,ly:4,anchor:"end"},
+ {id:"wkr",n:"和倉溫泉",jp:"和倉温泉",p:"ishikawa",lat:37.09,lon:136.92,d:"能登半島的溫泉鄉。震災後部分旅館仍在重建，請先確認營業狀況。",lx:10,ly:4},
+ {id:"wjm",n:"輪島",jp:"輪島市",p:"ishikawa",lat:37.39,lon:136.90,d:"輪島朝市、白米千枚田。2024 年震災受創嚴重，出發前請查最新開放與道路資訊。",lx:-10,ly:4,anchor:"end"},
+ {id:"kmt",n:"小松機場",jp:"小松空港",p:"ishikawa",lat:36.39,lon:136.41,d:"有台灣直飛班機，可作為北陸進出點。",lx:-10,ly:4,anchor:"end"},
+ {id:"kga",n:"加賀溫泉鄉",jp:"山代温泉",p:"ishikawa",lat:36.29,lon:136.36,d:"山代、山中、片山津溫泉，住宿選擇多，離小松機場很近。",lx:0,ly:22,anchor:"middle"},
+ {id:"tjb",n:"東尋坊",jp:"東尋坊",p:"fukui",lat:36.24,lon:136.12,d:"日本海岸柱狀節理斷崖，傍晚看夕陽很漂亮。",lx:-10,ly:4,anchor:"end"},
+ {id:"fki",n:"福井市",jp:"福井駅",p:"fukui",lat:36.06,lon:136.22,d:"北陸新幹線延伸到福井、敦賀。越前蟹、醬汁豬排飯。",lx:-10,ly:14,anchor:"end"},
+ {id:"eiz",n:"永平寺",jp:"永平寺",p:"fukui",lat:36.06,lon:136.36,d:"曹洞宗大本山，參觀約 1 到 1.5 小時。",lx:0,ly:20,anchor:"middle"},
+ {id:"dino",n:"恐龍博物館",jp:"福井県立恐竜博物館",p:"fukui",lat:36.08,lon:136.51,d:"勝山市，日本最大的恐龍博物館，假日建議網路預約。",lx:10,ly:4},
+ {id:"trg",n:"敦賀",jp:"敦賀駅",p:"fukui",lat:35.65,lon:136.06,d:"氣比神宮、日本海鮮市場，往京都、名古屋的交通要衝。",lx:10,ly:4},
+ {id:"sk",n:"白川鄉",jp:"白川郷",p:"gifu",lat:36.26,lon:136.91,d:"合掌村世界遺產，城山展望台必看。冬季點燈需事先預約停車。",lx:-8,ly:20,anchor:"end"},
+ {id:"tky",n:"飛驒高山",jp:"高山駅",p:"gifu",lat:36.14,lon:137.25,d:"古街三町、宮川朝市、飛驒牛。很適合住一晚當中繼站。",lx:10,ly:14},
+ {id:"okh",n:"奧飛驒溫泉鄉・新穗高",jp:"新穂高ロープウェイ",p:"gifu",lat:36.27,lon:137.56,d:"新穗高雙層纜車可看北阿爾卑斯，平湯、新穗高溫泉露天風呂多。",lx:-6,ly:-12,anchor:"end"},
+ {id:"ger",n:"下呂溫泉",jp:"下呂温泉",p:"gifu",lat:35.81,lon:137.24,d:"日本三名泉之一，溫泉街可以泡足湯散步。",lx:10,ly:4},
+ {id:"gjo",n:"郡上八幡",jp:"郡上八幡城",p:"gifu",lat:35.75,lon:136.96,d:"水之城下町，郡上八幡城、食品模型體驗。",lx:-10,ly:4,anchor:"end"},
+ {id:"mgm",n:"馬籠宿",jp:"馬籠宿",p:"gifu",lat:35.53,lon:137.57,d:"中山道宿場町（中津川市），可健行到妻籠宿約 2.5 小時。",lx:-10,ly:4,anchor:"end"},
+ {id:"gif",n:"岐阜市",jp:"岐阜城",p:"gifu",lat:35.42,lon:136.76,d:"金華山岐阜城、長良川鵜飼（約 5 到 10 月）。",lx:-10,ly:4,anchor:"end"},
+ {id:"ngy",n:"名古屋",jp:"名古屋駅",p:"aichi",lat:35.17,lon:136.88,d:"大部分人從這裡取車或還車。市區還車後搭電車到機場最方便。",lx:10,ly:4},
+ {id:"cbk",n:"中部國際機場",jp:"中部国際空港",p:"aichi",lat:34.86,lon:136.81,d:"有台灣直飛班機，機場就有租車櫃台。",lx:10,ly:4},
+];
+// [from, to, minutes, road] road: exp=高速, gen=一般道, sea=季節限定
+const EDGES=[
+ ["cbk","ngy",40,"exp","知多半島道路"],["ngy","gif",40,"exp","名神高速"],["gif","gjo",50,"exp","東海北陸道"],
+ ["gjo","sk",70,"exp","東海北陸道"],["gjo","tky",60,"exp","東海北陸道＋中部縱貫道"],["sk","tky",50,"exp","東海北陸道＋中部縱貫道"],
+ ["sk","gks",25,"exp","東海北陸道"],["sk","kz",75,"exp","東海北陸道＋北陸道"],["gks","tka",40,"exp","東海北陸道"],
+ ["tky","okh",70,"gen","國道158/471"],["tky","ger",60,"gen","國道41"],["ger","gjo",70,"gen","國道256"],["ger","mgm",80,"gen","國道257"],
+ ["mgm","ngy",80,"exp","中央道"],["tky","toy",100,"gen","國道41"],["kz","tka",40,"exp","北陸道"],["tka","toy",30,"exp","北陸道"],
+ ["toy","tym",60,"gen","縣道"],["toy","una",60,"exp","北陸道"],["kz","wkr",75,"exp","能登里山海道"],["wkr","wjm",50,"gen","縣道"],
+ ["kz","kmt",35,"exp","北陸道"],["kmt","kga",20,"gen","國道8"],["kz","kga",45,"exp","北陸道"],["kga","tjb",35,"gen","國道305"],
+ ["tjb","fki",40,"gen","國道305"],["kga","fki",40,"exp","北陸道"],["fki","eiz",25,"gen","國道416"],["eiz","dino",25,"gen","國道416"],
+ ["fki","trg",45,"exp","北陸道"],["trg","gif",80,"exp","北陸道＋名神"],["dino","gjo",75,"gen","國道158＋中部縱貫道"],
+ ["kga","sk",90,"sea","白山白川鄉白色公路（季節限定）"],
+];
+// rough Sea of Japan coastline for orientation
+const COAST=[[35.62,135.95],[35.75,136.0],[35.95,135.98],[36.12,136.08],[36.24,136.12],[36.35,136.27],[36.48,136.48],[36.62,136.6],[36.90,136.76],[37.05,136.72],[37.25,136.72],[37.40,136.86],[37.45,137.05],[37.52,137.27],[37.50,137.36],[37.40,137.30],[37.30,137.15],[37.15,137.0],[37.04,136.98],[36.92,137.0],[36.86,136.99],[36.79,137.07],[36.76,137.22],[36.82,137.40],[36.90,137.48],[36.97,137.60],[37.05,137.86]];
+const ICOAST=[[35.05,136.68],[34.95,136.72],[34.86,136.79],[34.78,136.85],[34.70,136.92]];
+
+const K=300,COS=Math.cos(36*Math.PI/180),LON0=135.82,LAT0=37.62;
+const px=(lat,lon)=>[(lon-LON0)*K*COS+18,(LAT0-lat)*K+14];
+const byId=Object.fromEntries(SPOTS.map(s=>[s.id,s]));
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a={},txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e};
+
+// graph + shortest path
+const adj={};
+EDGES.forEach(([a,b,m,r,name])=>{(adj[a]??=[]).push({to:b,m,r,name});(adj[b]??=[]).push({to:a,m,r,name})});
+function path(a,b){
+  const dist={[a]:0},prev={},done=new Set();
+  while(true){
+    let u=null;for(const k in dist)if(!done.has(k)&&(u===null||dist[k]<dist[u]))u=k;
+    if(u===null)return null; if(u===b)break; done.add(u);
+    for(const e of adj[u]||[]){if(e.r==="sea")continue;const nd=dist[u]+e.m;if(dist[e.to]===undefined||nd<dist[e.to]){dist[e.to]=nd;prev[e.to]={from:u,e}}}
+  }
+  const roads=[];let c=b;while(c!==a){roads.unshift(prev[c].e.name);c=prev[c].from}
+  return {m:dist[b],roads:[...new Set(roads)]};
+}
+const fmt=m=>{const h=Math.floor(m/60),mm=m%60;return h?`${h} 小時${mm?` ${mm} 分`:""}`:`${mm} 分`};
+
+// draw map
+const svg=document.getElementById("map");
+svg.appendChild(el("rect",{x:0,y:0,width:520,height:880,fill:"var(--land)"}));
+function coastPoly(pts,close){return pts.map(([la,lo])=>px(la,lo).map(v=>v.toFixed(1)).join(",")).join(" ")}
+// sea area: coastline closed along the top/left edges
+const seaPts=[[37.7,135.7],...COAST,[37.7,138.2]];
+svg.appendChild(el("polygon",{points:coastPoly(seaPts),fill:"var(--sea)",stroke:"var(--line)","stroke-width":1}));
+const bayPts=[[34.6,136.5],[35.05,136.5],...ICOAST,[34.6,137.0]];
+svg.appendChild(el("polygon",{points:coastPoly(bayPts),fill:"var(--sea)",stroke:"var(--line)","stroke-width":1}));
+const lab=(x,y,t,sz,extra={})=>svg.appendChild(el("text",Object.assign({x,y,"font-size":sz,fill:"var(--muted)","font-family":"var(--display)"},extra),t));
+lab(60,90,"日 本 海",22,{"letter-spacing":"4"});
+lab(30,850,"伊勢灣",13);
+// prefecture area labels
+[["富山縣",36.55,137.75],["石川縣",36.95,136.55],["福井縣",35.83,136.3],["岐阜縣",35.95,137.0],["愛知縣",35.0,137.15]].forEach(([t,la,lo])=>{const[x,y]=px(la,lo);lab(x,y,t,15,{"text-anchor":"middle",opacity:.55,"font-weight":"700"})});
+
+const edgeLayer=el("g");svg.appendChild(edgeLayer);
+EDGES.forEach(([a,b,m,r])=>{
+  const[x1,y1]=px(byId[a].lat,byId[a].lon),[x2,y2]=px(byId[b].lat,byId[b].lon);
+  const col=r==="exp"?"var(--exp)":r==="sea"?"var(--seasonal)":"var(--gen)";
+  edgeLayer.appendChild(el("line",{x1,y1,x2,y2,stroke:col,"stroke-width":r==="exp"?3:2,"stroke-dasharray":r==="sea"?"6 5":"none","stroke-linecap":"round",opacity:.8}));
+  const mx=(x1+x2)/2,my=(y1+y2)/2;
+  const g=el("g");
+  g.appendChild(el("rect",{x:mx-15,y:my-8,width:30,height:15,rx:7,fill:"var(--paper)",stroke:col,"stroke-width":1}));
+  g.appendChild(el("text",{x:mx,y:my+3.5,"font-size":9.5,"text-anchor":"middle",fill:"var(--ink)","font-family":"var(--body)"},m>=60?(m/60).toFixed(1).replace(/\.0$/,"")+"h":m+"m"));
+  edgeLayer.appendChild(g);
+});
+const routeLayer=el("g");svg.appendChild(routeLayer);
+const spotLayer=el("g");svg.appendChild(spotLayer);
+const spotEls={};
+SPOTS.forEach(s=>{
+  const[x,y]=px(s.lat,s.lon);
+  const g=el("g",{class:"spot",tabindex:0,role:"button","aria-label":s.n});
+  g.appendChild(el("circle",{class:"hit",cx:x,cy:y,r:14,fill:"transparent"}));
+  const pt=el("circle",{class:"pt",cx:x,cy:y,r:6.5,fill:PREF[s.p][1],stroke:"var(--paper)","stroke-width":2});
+  g.appendChild(pt);
+  const badge=el("text",{x,y:y+3.5,"font-size":9,"text-anchor":"middle",fill:"var(--paper)","font-weight":"700"});
+  g.appendChild(badge);
+  const t=el("text",{x:x+s.lx,y:y+s.ly,"font-size":12.5,"text-anchor":s.anchor||"start",fill:"var(--ink)","font-weight":"700","font-family":"var(--body)",stroke:"var(--land)","stroke-width":3,"paint-order":"stroke"},s.n);
+  g.appendChild(t);
+  g.addEventListener("click",()=>show(s.id));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();show(s.id)}});
+  spotLayer.appendChild(g);spotEls[s.id]={pt,badge};
+});
+
+// route state
+const KEY="hokuriku-gifu-route-v1";
+const SAMPLES=[
+ {t:"名古屋進出 6 天環線",r:["cbk","gjo","sk","gks","kz","toy","tky","ger","ngy"]},
+ {t:"小松進、名古屋出",r:["kmt","kz","gks","sk","tky","okh","ger","gjo","ngy"]},
+ {t:"福井恐龍＋加賀＋金澤",r:["kmt","kga","tjb","eiz","dino","kz"]},
+ {t:"立山黑部＋高山",r:["toy","tym","toy","tky","okh"]},
+];
+let route=SAMPLES[0].r.slice(), isSample=true;
+try{const saved=JSON.parse(localStorage.getItem(KEY)||"null");if(Array.isArray(saved)){route=saved.filter(id=>byId[id]);isSample=false}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(route))}catch(e){}};
+
+let current=null;
+function show(id){
+  current=id;const s=byId[id];const[pn,pc]=PREF[s.p];
+  const box=document.getElementById("info");box.innerHTML="";
+  const d=document.createElement("div");
+  d.innerHTML=`<div class="pref" style="color:${pc}">${pn}</div><div><span class="nm"></span><span class="jp"></span></div><p></p>`;
+  d.querySelector(".nm").textContent=s.n;d.querySelector(".jp").textContent=s.jp;d.querySelector("p").textContent=s.d;
+  const row=document.createElement("div");row.className="row";
+  const add=document.createElement("button");add.type="button";add.className="primary";add.textContent="加入路線";
+  add.onclick=()=>{route.push(id);isSample=false;save();render()};
+  const g=document.createElement("a");g.className="btn";g.target="_blank";g.rel="noopener";
+  g.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(s.jp);g.textContent="在 Google 地圖查看";
+  row.append(add,g);d.appendChild(row);box.appendChild(d);
+}
+
+function render(){
+  const ol=document.getElementById("route");ol.innerHTML="";
+  document.getElementById("routeTitle").textContent=isSample?"我的路線（範例）":"我的路線";
+  let total=0;
+  route.forEach((id,i)=>{
+    if(i>0){
+      const p=path(route[i-1],id);const leg=document.createElement("li");
+      if(route[i-1]===id){leg.className="leg";leg.textContent="同一地點"}
+      else if(p){total+=p.m;leg.className="leg"+(p.m>=150?" long":"");leg.textContent=`約 ${fmt(p.m)}・${p.roads.join("→")}${p.m>=150?"・車程偏長，可考慮中途住一晚":""}`}
+      else{leg.className="leg";leg.textContent="無法估算"}
+      ol.appendChild(leg);
+    }
+    const li=document.createElement("li");li.className="stop";
+    li.innerHTML=`<span class="num">${i+1}</span><span class="n"></span><span class="ctl"></span>`;
+    li.querySelector(".n").textContent=byId[id].n;
+    const ctl=li.querySelector(".ctl");
+    [["↑","上移",-1],["↓","下移",1]].forEach(([t,lbl,dir])=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.setAttribute("aria-label",lbl+" "+byId[id].n);
+      b.disabled=(dir<0&&i===0)||(dir>0&&i===route.length-1);
+      b.onclick=()=>{const j=i+dir;[route[i],route[j]]=[route[j],route[i]];isSample=false;save();render()};ctl.appendChild(b)});
+    const x=document.createElement("button");x.type="button";x.textContent="✕";x.setAttribute("aria-label","移除 "+byId[id].n);
+    x.onclick=()=>{route.splice(i,1);isSample=false;save();render()};ctl.appendChild(x);
+    ol.appendChild(li);
+  });
+  if(!route.length){const e=document.createElement("li");e.className="empty";e.textContent="還沒有地點。點地圖上的圓點，按「加入路線」，或套用下方範例。";ol.appendChild(e)}
+  document.getElementById("total").hidden=route.length<2;
+  document.getElementById("totalVal").textContent=fmt(total);
+  // map overlay
+  routeLayer.innerHTML="";
+  for(let i=1;i<route.length;i++){
+    const a=byId[route[i-1]],b=byId[route[i]];const[x1,y1]=px(a.lat,a.lon),[x2,y2]=px(b.lat,b.lon);
+    routeLayer.appendChild(el("line",{x1,y1,x2,y2,stroke:"var(--accent)","stroke-width":5,opacity:.45,"stroke-linecap":"round"}));
+  }
+  SPOTS.forEach(s=>{const idx=route.indexOf(s.id);const{pt,badge}=spotEls[s.id];
+    if(idx>=0){pt.setAttribute("r",9);pt.setAttribute("fill","var(--accent)");badge.textContent=idx+1}
+    else{pt.setAttribute("r",6.5);pt.setAttribute("fill",PREF[s.p][1]);badge.textContent=""}});
+  // google maps link
+  const a=document.getElementById("gmap");
+  if(route.length>=2){
+    const q=route.map(id=>byId[id].jp);const o=q[0],d=q[q.length-1],w=q.slice(1,-1).slice(0,8);
+    a.href="https://www.google.com/maps/dir/?api=1&travelmode=driving&origin="+encodeURIComponent(o)+"&destination="+encodeURIComponent(d)+(w.length?"&waypoints="+encodeURIComponent(w.join("|")):"");
+    a.removeAttribute("aria-disabled");a.style.opacity=1;a.style.pointerEvents="auto";
+  }else{a.href="#";a.setAttribute("aria-disabled","true");a.style.opacity=.5;a.style.pointerEvents="none"}
+  document.getElementById("gnote").textContent=route.length>10?`目前 ${route.length} 個地點，Google 地圖只會帶入前 10 個（起點、終點與中間 8 個），建議分天開啟。`:"Google 地圖一次最多帶 10 個地點，超過時請分天開啟。";
+}
+document.getElementById("clear").onclick=()=>{route=[];isSample=false;save();render()};
+const sw=document.getElementById("samples");
+SAMPLES.forEach(s=>{const b=document.createElement("button");b.type="button";b.textContent=s.t;b.onclick=()=>{route=s.r.slice();isSample=true;save();render()};sw.appendChild(b)});
+render();show("sk");
+</script>
+</body>
+</html>
