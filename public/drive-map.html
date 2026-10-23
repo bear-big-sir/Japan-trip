@@ -281,6 +281,8 @@ let route=SAMPLES[0].r.slice(), isSample=true;
 try{const saved=JSON.parse(localStorage.getItem(KEY)||"null");if(Array.isArray(saved)){route=saved.filter(id=>byId[id]);isSample=false}}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(route))}catch(e){}};
 
+// Rakuten Travel keyword for lodging near each spot
+const HOTELKW={toy:"富山駅",tym:"立山",una:"宇奈月温泉",tka:"高岡",gks:"五箇山",kz:"金沢",wkr:"和倉温泉",wjm:"輪島",kmt:"小松",kga:"山代温泉",tjb:"あわら温泉",fki:"福井駅",eiz:"永平寺",dino:"勝山",trg:"敦賀",sk:"白川郷",tky:"高山",okh:"奥飛騨温泉郷",ger:"下呂温泉",gjo:"郡上八幡",mgm:"馬籠",gif:"岐阜駅",ngy:"名古屋駅",cbk:"中部国際空港"};
 let current=null;
 function show(id){
   current=id;const s=byId[id];const[pn,pc]=PREF[s.p];
@@ -293,7 +295,9 @@ function show(id){
   add.onclick=()=>{route.push(id);isSample=false;save();render()};
   const g=document.createElement("a");g.className="btn";g.target="_blank";g.rel="noopener";
   g.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(s.jp);g.textContent="在 Google 地圖查看";
-  row.append(add,g);d.appendChild(row);box.appendChild(d);
+  const h=document.createElement("a");h.className="btn";h.target="_blank";h.rel="noopener";
+  h.href="https://kw.travel.rakuten.co.jp/keyword/Search.do?charset=utf-8&f_query="+encodeURIComponent(HOTELKW[id]||s.jp);h.textContent="在樂天找附近住宿";
+  row.append(add,g,h);d.appendChild(row);box.appendChild(d);
 }
 
 function render(){
