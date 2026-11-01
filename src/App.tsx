@@ -13,6 +13,7 @@ import { ResearchPage } from './pages/ResearchPage'
 import { TodosPage } from './pages/TodosPage'
 import { BudgetPage } from './pages/BudgetPage'
 import { TripBar } from './components/TripBar'
+import { AccountBar } from './components/AccountBar'
 import type { TripFields } from './components/TripForm'
 
 type PageKey =
@@ -119,6 +120,7 @@ export default function App() {
             ✏️
           </button>
         </div>
+        <AccountBar />
         <nav className="menu" aria-label="主要選單">
           {MENU.map((m) => (
             <button
@@ -190,7 +192,7 @@ export default function App() {
       )}
 
       <footer className="footer">
-        資料只保存在本裝置瀏覽器（IndexedDB），不會上傳到任何伺服器。
+        已登入雲端帳號。改造進行中：目前旅行資料仍保存在本裝置瀏覽器（IndexedDB），下一步才會改存到雲端資料庫。
       </footer>
     </div>
   )

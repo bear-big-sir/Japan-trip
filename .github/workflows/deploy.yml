@@ -26,7 +26,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: 檢查 Supabase 設定
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::請到 GitHub → Settings → Secrets and variables → Actions 新增 VITE_SUPABASE_URL 與 VITE_SUPABASE_PUBLISHABLE_KEY"
+            exit 1
+          fi
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in
+            sb_secret_*|*service_role*) echo "::error::不可以使用私密金鑰，請改用 publishable key"; exit 1 ;;
+          esac
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
