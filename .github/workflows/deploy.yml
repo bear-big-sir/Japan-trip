@@ -35,6 +35,12 @@ jobs:
             echo "::error::請到 GitHub → Settings → Secrets and variables → Actions 新增 VITE_SUPABASE_URL 與 VITE_SUPABASE_PUBLISHABLE_KEY"
             exit 1
           fi
+          if ! printf '%s' "$VITE_SUPABASE_URL" | grep -Eq '^https://[a-z0-9]+\.supabase\.co/?$'; then
+            echo "::error::VITE_SUPABASE_URL 格式不正確（不可有空格），應該像 https://xxxx.supabase.co"; exit 1
+          fi
+          if ! printf '%s' "$VITE_SUPABASE_PUBLISHABLE_KEY" | grep -Eq '^(sb_publishable_[A-Za-z0-9_-]+|eyJ[A-Za-z0-9._-]+)$'; then
+            echo "::error::VITE_SUPABASE_PUBLISHABLE_KEY 格式不正確：不可有空格或換行，應以 sb_publishable_ 開頭"; exit 1
+          fi
           case "$VITE_SUPABASE_PUBLISHABLE_KEY" in
             sb_secret_*|*service_role*) echo "::error::不可以使用私密金鑰，請改用 publishable key"; exit 1 ;;
           esac
