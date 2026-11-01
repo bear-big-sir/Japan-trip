@@ -269,3 +269,25 @@ select { appearance: auto; }
 .conflict-side-head input { width: 20px; height: 20px; }
 .conflict-field { word-break: break-word; }
 .trip-bar-empty .btn { margin-left: 0; }
+
+/* ---------- 登入與帳號 ---------- */
+.auth-main { max-width: 520px; }
+.auth-card h3 { margin: 4px 0 8px; font-size: 1.05rem; }
+.account-bar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 0 12px 6px 16px; font-size: .9rem;
+}
+.account-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.account-role { opacity: .8; font-size: .82rem; }
+.account-btn { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.35); }
+.account-btn:hover { background: rgba(255,255,255,.3); }
+.sync-dot { width: 10px; height: 10px; border-radius: 50%; background: #bbb; flex: 0 0 auto; }
+.sync-dot.on { background: #7ee08a; }
+.offline-banner {
+  background: #333; color: #fff; padding: 8px 16px; font-size: .9rem; text-align: center;
+}
+.member-list { list-style: none; padding: 0; margin: 8px 0 12px; }
+.member-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
