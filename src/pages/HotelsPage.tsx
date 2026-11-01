@@ -32,7 +32,7 @@ export function HotelsPage({ trip, onChanged }: { trip: Trip; onChanged: () => P
   const sorted = [...hotels].sort((a, b) => (a.checkIn || '9').localeCompare(b.checkIn || '9'))
 
   async function save(v: Record<string, string>) {
-    const fields = Object.fromEntries(KEYS.map((k) => [k, v[k].trim()])) as Omit<
+    const fields = Object.fromEntries(KEYS.map((k) => [k, v[k].trim()])) as unknown as Omit<
       Hotel,
       'id' | 'createdAt' | 'updatedAt' | 'tripId'
     >

@@ -36,7 +36,7 @@ export function FlightsPage({ trip, onChanged }: { trip: Trip; onChanged: () => 
   )
 
   async function save(v: Record<string, string>) {
-    const fields = Object.fromEntries(KEYS.map((k) => [k, v[k].trim()])) as Omit<
+    const fields = Object.fromEntries(KEYS.map((k) => [k, v[k].trim()])) as unknown as Omit<
       Flight,
       'id' | 'createdAt' | 'updatedAt' | 'tripId'
     >

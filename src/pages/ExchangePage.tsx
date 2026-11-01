@@ -4,6 +4,7 @@ import {
   createBackup,
   deleteBackup,
   getMeta,
+  isCloudActive,
   listBackups,
   restoreBackup,
   setMeta,
@@ -28,6 +29,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
   const [restoring, setRestoring] = useState<LocalBackup | null>(null)
   const [deletingBackup, setDeletingBackup] = useState<LocalBackup | null>(null)
   const [message, setMessage] = useState('')
+  const cloud = stats?.cloud ?? isCloudActive()
 
   async function refresh() {
     setBackups(await listBackups())
@@ -78,7 +80,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
 
   return (
     <section>
-      <BackupWarning />
+      <BackupWarning cloud={cloud} />
       <StatsBar stats={stats} />
       {message && (
         <div className="notice" onClick={() => setMessage('')}>
@@ -103,7 +105,10 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
 
       <div className="card">
         <h3>② 匯出 JSON</h3>
-        <p>匯出這台裝置上的全部旅行及相關資料，檔名會像 {exportFileName()}。</p>
+        <p>
+          {cloud ? '匯出雲端上全家的旅行及相關資料' : '匯出這台裝置上的全部旅行及相關資料'}，檔名會像{' '}
+          {exportFileName()}。
+        </p>
         <p className="muted small">
           📅 建議每次新增或修改一批資料後就匯出一次，存到 iCloud 雲碟、Google 雲端硬碟或寄給自己，
           換手機或清除瀏覽器資料時才救得回來。
@@ -117,6 +122,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
       </div>
 
       <ImportPanel
+        cloud={cloud}
         onExport={onExport}
         onChanged={async () => {
           await refresh()
@@ -165,6 +171,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
         )}
       </div>
 
+      {!cloud && (
       <div className="card">
         <h3>💑 夫妻資料交換步驟</h3>
         <ol>
@@ -179,6 +186,7 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
           💡 如果兩個人長時間各自編輯，衝突會變多。建議每次修改完行程後就先交換、合併一次。
         </p>
       </div>
+      )}
 
       {restoring && (
         <ConfirmDialog
@@ -187,11 +195,19 @@ export function ExchangePage({ stats, onExport, onChanged }: Props) {
           confirmLabel="確定還原"
           message={
             <>
-              <p>
-                目前所有資料會被替換成 <b>{formatDateTime(restoring.createdAt)}</b> 的備份內容
-                （{countOf(restoring)} 筆資料）。
-              </p>
+              {cloud ? (
+                <p>
+                  <b>{formatDateTime(restoring.createdAt)}</b> 備份裡的 {countOf(restoring)} 筆資料會寫回雲端，
+                  蓋掉目前同一筆資料的內容；備份之後才新增的資料會保留，不會被刪除。
+                </p>
+              ) : (
+                <p>
+                  目前所有資料會被替換成 <b>{formatDateTime(restoring.createdAt)}</b> 的備份內容
+                  （{countOf(restoring)} 筆資料）。
+                </p>
+              )}
               <p>還原前，系統會先把目前的資料再自動備份一次。</p>
+              {cloud && <p className="warning-text">⚠️ 這會改動雲端上全家共用的資料，家人也會看到還原後的內容。</p>}
             </>
           }
           onConfirm={doRestore}

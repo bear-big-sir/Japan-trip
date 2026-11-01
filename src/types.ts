@@ -25,7 +25,15 @@ export interface BaseRecord {
   id: string
   createdAt: string
   updatedAt: string
+  /** 雲端版本號：每次修改 +1，用來偵測兩人同時修改（只有雲端資料才有） */
+  version?: number
+  /** 建立者／最後更新者的帳號 ID（只有雲端資料才有） */
+  createdBy?: string | null
+  updatedBy?: string | null
 }
+
+/** 這些欄位由資料庫自動維護，比較內容是否相同時不列入 */
+export const META_FIELDS = ['updatedAt', 'version', 'createdBy', 'updatedBy'] as const
 
 /** 屬於某一趟旅行的子資料 */
 export interface TripChild extends BaseRecord {

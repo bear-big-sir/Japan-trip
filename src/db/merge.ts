@@ -16,6 +16,7 @@ import {
   FORMAT_VERSION,
   MIN_FORMAT_VERSION,
   STORE_LABELS,
+  META_FIELDS,
   emptyData,
   type AppData,
   type BaseRecord,
@@ -178,11 +179,11 @@ function stable(v: unknown): string {
   return JSON.stringify(v)
 }
 
-/** 內容是否相同：只差在「最後修改時間」也算相同 */
+/** 內容是否相同：只差在「最後修改時間、版本號、修改者」也算相同 */
 export function sameContent(a: BaseRecord, b: BaseRecord): boolean {
   const strip = (r: BaseRecord) => {
     const copy: Record<string, unknown> = { ...r }
-    delete copy.updatedAt
+    for (const k of META_FIELDS) delete copy[k]
     return copy
   }
   return stable(strip(a)) === stable(strip(b))
@@ -191,7 +192,7 @@ export function sameContent(a: BaseRecord, b: BaseRecord): boolean {
 /** 兩筆資料有差異的欄位 */
 export function diffFields(a: BaseRecord, b: BaseRecord): string[] {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)])
-  keys.delete('updatedAt')
+  for (const k of META_FIELDS) keys.delete(k)
   keys.delete('id')
   const ra = a as unknown as Record<string, unknown>
   const rb = b as unknown as Record<string, unknown>

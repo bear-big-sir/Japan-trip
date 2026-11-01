@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Trip } from './types'
-import { buildExportFile, createRecord, getAll, getMeta, getStats, markExported, setMeta, type Stats } from './db/db'
+import {
+  buildExportFile,
+  createRecord,
+  getAll,
+  getMeta,
+  getStats,
+  isCloudActive,
+  markExported,
+  setMeta,
+  type Stats,
+} from './db/db'
+import { friendlyError } from './auth/household'
 import { DEFAULT_TITLE, tabTitle } from './lib/title'
 import { TitleDialog } from './components/TitleDialog'
 import { downloadJson } from './lib/download'
@@ -51,6 +63,7 @@ export default function App() {
     }
   })
   const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
   const [title, setTitle] = useState(DEFAULT_TITLE)
   const [editingTitle, setEditingTitle] = useState(false)
 
@@ -77,9 +90,18 @@ export default function App() {
       setStats(s)
     } catch (e) {
       setError(
-        `無法開啟本機資料庫：${(e as Error).message}。若使用無痕模式，請改用一般模式開啟。`,
+        isCloudActive()
+          ? `無法讀取雲端資料：${friendlyError(e)}`
+          : `無法開啟本機資料庫：${(e as Error).message}。若使用無痕模式，請改用一般模式開啟。`,
       )
     }
+  }, [])
+
+  // 儲存、刪除等動作若失敗（例如斷線、版本衝突），統一在畫面上方顯示原因，不會假裝已儲存
+  useEffect(() => {
+    const onRejection = (ev: PromiseRejectionEvent) => setToast(friendlyError(ev.reason))
+    window.addEventListener('unhandledrejection', onRejection)
+    return () => window.removeEventListener('unhandledrejection', onRejection)
   }, [])
 
   useEffect(() => {
@@ -144,6 +166,16 @@ export default function App() {
           {menuItem.icon} {menuItem.label}
         </h2>
         {error && <div className="error-box">{error}</div>}
+        {toast &&
+          createPortal(
+            <div className="error-toast" role="alert">
+              <span>❌ 沒有儲存成功：{toast}</span>
+              <button className="btn btn-small" onClick={() => setToast('')}>
+                知道了
+              </button>
+            </div>,
+            document.body,
+          )}
 
         {page === 'trips' && (
           <HomePage
@@ -192,7 +224,9 @@ export default function App() {
       )}
 
       <footer className="footer">
-        已登入雲端帳號。改造進行中：目前旅行資料仍保存在本裝置瀏覽器（IndexedDB），下一步才會改存到雲端資料庫。
+        {stats?.cloud
+          ? '旅行資料存在 Supabase 雲端資料庫，家人登入後看到的是同一份資料。請定期匯出 JSON 備份。'
+          : '旅行資料保存在本裝置瀏覽器（IndexedDB）。'}
       </footer>
     </div>
   )

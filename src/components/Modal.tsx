@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface Props {
   title: string
@@ -13,13 +14,15 @@ export function Modal({ title, onClose, children }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  return (
+  // 放到 <body> 底下，避免被頁首（白色字）等外層樣式影響
+  return createPortal(
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}>
       <div className="modal">
         <h2 className="modal-title">{title}</h2>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

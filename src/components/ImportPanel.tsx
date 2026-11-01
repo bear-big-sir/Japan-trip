@@ -1,6 +1,6 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { DATA_STORES, STORE_LABELS, type AppData, type BaseRecord, type ExportFile } from '../types'
-import { loadAll } from '../db/db'
+import { buildLocalExportFile, loadAll } from '../db/db'
 import {
   FIELD_LABELS,
   importMerge,
@@ -17,6 +17,8 @@ import { formatDateTime } from '../lib/id'
 interface Props {
   onChanged: () => Promise<void>
   onExport: () => Promise<void>
+  /** 雲端模式：顯示「上傳這台裝置的舊資料到雲端」 */
+  cloud?: boolean
 }
 
 type State =
@@ -32,32 +34,53 @@ type State =
   | { step: 'done'; result: MergeResult }
 
 /** 匯入 JSON → 檢查 → 預覽與衝突選擇 → 確認後安全合併 */
-export function ImportPanel({ onChanged, onExport }: Props) {
+export function ImportPanel({ onChanged, onExport, cloud = false }: Props) {
   const [state, setState] = useState<State>({ step: 'idle' })
   const [choices, setChoices] = useState<Record<string, Choice>>({})
   const [busy, setBusy] = useState(false)
   const [runError, setRunError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const [deviceCount, setDeviceCount] = useState(0)
+
+  useEffect(() => {
+    if (!cloud) return
+    buildLocalExportFile()
+      .then((f) => setDeviceCount(DATA_STORES.reduce((n, s) => n + f.data[s].length, 0)))
+      .catch(() => setDeviceCount(0))
+  }, [cloud])
+
+  async function startPreview(fileName: string, text: string) {
+    setRunError('')
+    setChoices({})
+    try {
+      const local = await loadAll()
+      const r = validateImport(
+        text,
+        local.trips.map((t) => t.id),
+      )
+      if (!r.ok) return setState({ step: 'error', fileName, errors: r.errors })
+      setState({ step: 'preview', fileName, file: r.file, plan: planMerge(local, r.file.data), local })
+    } catch (e) {
+      setState({ step: 'error', fileName, errors: [`讀取目前資料失敗：${(e as Error).message}`] })
+    }
+  }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     e.target.value = '' // 讓同一個檔案可以再選一次
     if (!f) return
-    setRunError('')
-    setChoices({})
     let text: string
     try {
       text = await f.text()
     } catch {
       return setState({ step: 'error', fileName: f.name, errors: ['無法讀取這個檔案。'] })
     }
-    const local = await loadAll()
-    const r = validateImport(
-      text,
-      local.trips.map((t) => t.id),
-    )
-    if (!r.ok) return setState({ step: 'error', fileName: f.name, errors: r.errors })
-    setState({ step: 'preview', fileName: f.name, file: r.file, plan: planMerge(local, r.file.data), local })
+    await startPreview(f.name, text)
+  }
+
+  async function uploadDeviceData() {
+    const file = await buildLocalExportFile()
+    await startPreview('這台裝置瀏覽器裡的舊資料', JSON.stringify(file))
   }
 
   async function run() {
@@ -69,7 +92,11 @@ export function ImportPanel({ onChanged, onExport }: Props) {
       setState({ step: 'done', result })
       await onChanged()
     } catch (e) {
-      setRunError(`匯入失敗，原有資料沒有任何變更：${(e as Error).message}`)
+      setRunError(
+        cloud
+          ? `匯入沒有全部完成：${(e as Error).message}。已寫入雲端的部分會保留，請檢查網路後再按一次，已存在的資料會自動略過，不會重複。`
+          : `匯入失敗，原有資料沒有任何變更：${(e as Error).message}`,
+      )
     } finally {
       setBusy(false)
     }
@@ -84,9 +111,11 @@ export function ImportPanel({ onChanged, onExport }: Props) {
 
   return (
     <div className="card">
-      <h3>③ 匯入 JSON 與安全合併</h3>
+      <h3>{cloud ? '③ 匯入 JSON 到雲端' : '③ 匯入 JSON 與安全合併'}</h3>
       <p className="muted">
-        選擇對方（或自己之前）匯出的 JSON 檔。系統會先檢查檔案、顯示預覽，<b>按下確認前不會改動任何資料</b>。
+        {cloud ? '選擇之前匯出的 JSON 檔，' : '選擇對方（或自己之前）匯出的 JSON 檔。'}
+        系統會先檢查檔案、顯示預覽，<b>按下確認前不會改動任何資料</b>。
+        {cloud && '相同的資料只會保留一份，不會重複。'}
       </p>
       <input
         ref={inputRef}
@@ -97,9 +126,21 @@ export function ImportPanel({ onChanged, onExport }: Props) {
       />
 
       {(state.step === 'idle' || state.step === 'error') && (
-        <button className="btn btn-primary" onClick={() => inputRef.current?.click()}>
-          ⬆ 選擇 JSON 檔案
-        </button>
+        <div className="card-actions">
+          <button className="btn btn-primary" onClick={() => inputRef.current?.click()}>
+            ⬆ 選擇 JSON 檔案
+          </button>
+          {cloud && deviceCount > 0 && (
+            <button className="btn" onClick={uploadDeviceData}>
+              ☁️ 上傳這台裝置的舊資料（{deviceCount} 筆）
+            </button>
+          )}
+        </div>
+      )}
+      {cloud && deviceCount > 0 && (state.step === 'idle' || state.step === 'error') && (
+        <p className="muted small">
+          這台裝置的瀏覽器裡還有改版前的舊資料。按「上傳這台裝置的舊資料」會先顯示預覽，確認後才寫入雲端；舊資料仍會留在這台裝置，不會被刪除。
+        </p>
       )}
 
       {state.step === 'error' && (
@@ -127,6 +168,7 @@ export function ImportPanel({ onChanged, onExport }: Props) {
           onRun={run}
           busy={busy}
           error={runError}
+          cloud={cloud}
         />
       )}
 
@@ -145,7 +187,11 @@ export function ImportPanel({ onChanged, onExport }: Props) {
             </li>
           </ul>
           <p className="muted small">匯入前的資料已自動備份，可以在下方「本機備份與還原」找到。</p>
-          <p className="warning-text">👉 建議現在再匯出一次完整資料，傳給對方，作為下一次交換的基礎。</p>
+          <p className="warning-text">
+            {cloud
+              ? '👉 資料已存到雲端，家人重新整理後就看得到。建議現在匯出一次 JSON 備份。'
+              : '👉 建議現在再匯出一次完整資料，傳給對方，作為下一次交換的基礎。'}
+          </p>
           <div className="card-actions">
             <button className="btn btn-primary" onClick={onExport}>
               ⬇ 匯出合併後的資料
@@ -172,6 +218,7 @@ interface PreviewProps {
   onRun: () => void
   busy: boolean
   error: string
+  cloud: boolean
 }
 
 function Preview(p: PreviewProps) {
@@ -227,7 +274,10 @@ function Preview(p: PreviewProps) {
       </div>
 
       <ul className="small import-notes">
-        <li>確認後，系統會<b>先自動建立本機備份</b>，再一次寫入；中途失敗不會留下一半的資料。</li>
+        <li>
+          確認後，系統會<b>先自動建立本機備份</b>，再寫入
+          {p.cloud ? '雲端。若中途斷線，已寫入的部分會保留，再按一次確認即可補齊。' : '；中途失敗不會留下一半的資料。'}
+        </li>
         <li>合併只會新增或更新，<b>不會刪除</b>任何資料。對方刪掉的項目，在你這邊仍會保留，需要的話請自己刪除。</li>
       </ul>
 

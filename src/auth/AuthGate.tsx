@@ -4,6 +4,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useOnline } from '../lib/useOnline'
 import { AuthContext, type AuthState } from './context'
 import { createHousehold, friendlyError, loadMembership, type Membership } from './household'
+import { setCloudContext } from '../db/cloud'
 
 type Phase = 'loading' | 'signedOut' | 'noHousehold' | 'ready' | 'error'
 
@@ -23,12 +24,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const resolve = useCallback(async (s: Session | null) => {
     setSession(s)
     if (!s || !supabase) {
+      setCloudContext(null)
       setMembership(null)
       setPhase('signedOut')
       return
     }
     try {
       const m = await loadMembership(supabase, s.user.id)
+      // 先設定好雲端連線，主畫面一出現就從雲端讀資料
+      setCloudContext(m ? { client: supabase, householdId: m.householdId, userId: s.user.id } : null)
       setMembership(m)
       setError('')
       setPhase(m ? 'ready' : 'noHousehold')
