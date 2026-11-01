@@ -71,7 +71,7 @@ export function HomePage({
 
   return (
     <section>
-      <BackupWarning />
+      <BackupWarning cloud={stats?.cloud} />
       <StatsBar stats={stats} />
 
       <div className="toolbar">

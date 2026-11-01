@@ -1,5 +1,5 @@
 import { DATA_STORES, STORE_LABELS } from '../types'
-import type { Stats } from '../db/db'
+import { isCloudActive, type Stats } from '../db/db'
 import { formatDateTime } from '../lib/id'
 
 export function StatsBar({ stats }: { stats: Stats | null }) {
@@ -13,7 +13,10 @@ export function StatsBar({ stats }: { stats: Stats | null }) {
           </span>
         ))}
       </div>
-      <div className="stats-time">本機資料最後修改：{formatDateTime(stats.lastModified)}</div>
+      <div className="stats-time">
+        {stats.cloud ? '雲端資料最後更新' : '本機資料最後修改'}：{formatDateTime(stats.lastModified)}
+        {stats.lastModifiedBy && `（${stats.lastModifiedBy}）`}
+      </div>
       <div className="stats-time">
         上次匯出備份：{stats.lastExportAt ? formatDateTime(stats.lastExportAt) : '還沒有匯出過'}
       </div>
@@ -30,7 +33,15 @@ export function needsExport(stats: Stats): boolean {
   return !stats.lastExportAt || stats.lastModified > stats.lastExportAt
 }
 
-export function BackupWarning() {
+export function BackupWarning({ cloud = isCloudActive() }: { cloud?: boolean }) {
+  if (cloud) {
+    return (
+      <div className="warning">
+        ☁️ 資料存在 <b>Supabase 雲端資料庫</b>，兔兔和先生登入後看到的是同一份資料。
+        Supabase 免費方案<b>沒有可下載的自動備份</b>，請定期按「匯出資料」存一份 JSON 檔。
+      </div>
+    )
+  }
   return (
     <div className="warning">
       ⚠️ 資料只保存在<b>這台裝置的這個瀏覽器</b>，不會自動跨裝置同步。

@@ -160,7 +160,7 @@ input:focus, textarea:focus { outline: 2px solid var(--red); outline-offset: -1p
   z-index: 100;
 }
 .modal {
-  background: #fff; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+  background: #fff; color: var(--text); text-align: left; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
   border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
 }
 .modal-title { margin: 0 0 12px; font-size: 1.15rem; }
@@ -290,4 +290,25 @@ select { appearance: auto; }
 .member-item {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+
+/* 儲存失敗提示：固定在畫面上方，蓋在表單視窗上面，表單內容不會消失 */
+.error-toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  z-index: 2000;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #fff1f0;
+  color: #8a1c12;
+  border: 1px solid #e8a49c;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  text-align: left;
 }

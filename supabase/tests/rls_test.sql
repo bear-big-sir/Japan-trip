@@ -175,6 +175,20 @@ select public.remove_member('22222222-2222-2222-2222-222222222222');
 select test.act_as('22222222-2222-2222-2222-222222222222', 'husband@example.com');
 select test.ok('被移除的成員看不到資料', (select count(*) from public.trips) = 0);
 
+-- 10. 匯入時「已存在的資料」不能用 upsert（insert 觸發器會把 version 設回 1 → 版本衝突），前端改用逐筆 update
+select test.act_as('11111111-1111-1111-1111-111111111111', 'usagi@example.com');
+insert into public.trips (id, household_id, name, year) select 'aaaaaaaa-0000-0000-0000-000000000009', hid, '匯入測試', 2029 from ctx;
+update public.trips set name = '匯入測試2', version = 1 where id = 'aaaaaaaa-0000-0000-0000-000000000009';
+select test.fails('已存在且版本>1 的資料用 upsert 會被擋下（所以前端不用 upsert 更新）',
+  $q$insert into public.trips (id, household_id, name, year, version) select 'aaaaaaaa-0000-0000-0000-000000000009', hid, '匯入測試3', 2029, 2 from ctx
+     on conflict (id) do update set name = excluded.name, version = excluded.version$q$, 'VERSION_CONFLICT');
+update public.trips set name = '匯入測試3', version = 2 where id = 'aaaaaaaa-0000-0000-0000-000000000009';
+select test.ok('逐筆 update 帶目前版本可以成功覆寫',
+  (select version = 3 and name = '匯入測試3' from public.trips where id = 'aaaaaaaa-0000-0000-0000-000000000009'));
+insert into public.trips (id, household_id, name, year) select 'aaaaaaaa-0000-0000-0000-00000000000a', hid, '新匯入', 2029 from ctx;
+select test.ok('新的資料用 insert 寫入時 version 從 1 開始',
+  (select version from public.trips where id = 'aaaaaaaa-0000-0000-0000-00000000000a') = 1);
+
 -- 結果
 reset role;
 \o
